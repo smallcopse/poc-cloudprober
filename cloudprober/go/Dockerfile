@@ -3,6 +3,7 @@ ARG BUILDPLATFORM
 ARG TARGETARCH
 ARG TARGETOS
 ARG CLOUDPROBER_VERSION=v0.13.6
+ARG GO_VERSION=1.26
 
 FROM --platform=$BUILDPLATFORM alpine:3.19 AS downloader
 
@@ -17,7 +18,7 @@ RUN apk add --no-cache curl && \
     tar -xzf /tmp/cloudprober.tar.gz -C /usr/local/bin/ cloudprober && \
     chmod +x /usr/local/bin/cloudprober
 
-FROM --platform=$BUILDPLATFORM golang:1.22-alpine AS go-builder
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine AS go-builder
 
 ARG TARGETOS
 ARG TARGETARCH

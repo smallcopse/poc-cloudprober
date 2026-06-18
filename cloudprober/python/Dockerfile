@@ -2,6 +2,7 @@ ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 ARG TARGETARCH
 ARG CLOUDPROBER_VERSION=v0.13.6
+ARG PYTHON_VERSION=3.14
 
 FROM --platform=$BUILDPLATFORM alpine:3.19 AS downloader
 
@@ -18,9 +19,18 @@ RUN apk add --no-cache curl && \
 
 FROM redhat/ubi10-minimal:latest
 
-RUN microdnf install -y python3 python3-pip ca-certificates tzdata && \
-    microdnf clean all && \
-    pip3 install --no-cache-dir requests
+ARG PYTHON_VERSION
+
+RUN microdnf install -y \
+        python${PYTHON_VERSION} \
+        python3-pip \
+        ca-certificates \
+        tzdata && \
+    microdnf clean all
+
+COPY requirements.txt /tmp/requirements.txt
+RUN python${PYTHON_VERSION} -m pip install --no-cache-dir -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
 
 COPY --from=downloader /usr/local/bin/cloudprober /usr/local/bin/cloudprober
 
