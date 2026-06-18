@@ -17,6 +17,19 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - variant: go
+            context: ./cloudprober/go
+            extra_build_args: "GO_VERSION=1.26"
+          - variant: python
+            context: ./cloudprober/python
+            extra_build_args: ""
+          - variant: bash
+            context: ./cloudprober/bash
+            extra_build_args: ""
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,17 +54,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push multi-arch image
+      - name: Build and push multi-arch image (${{ matrix.variant }})
         uses: docker/build-push-action@v4
         with:
-          context: ./cloudprober
-          file: ./cloudprober/Dockerfile
+          context: ${{ matrix.context }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/poc-cloudprober:${{ env.CLOUDPROBER_VERSION }}-${{ steps.vars.outputs.build_date }}
-            ghcr.io/${{ github.repository_owner }}/poc-cloudprober:latest
+            ghcr.io/${{ github.repository_owner }}/poc-cloudprober-${{ matrix.variant }}:${{ env.CLOUDPROBER_VERSION }}-${{ steps.vars.outputs.build_date }}
+            ghcr.io/${{ github.repository_owner }}/poc-cloudprober-${{ matrix.variant }}:latest
           build-args: |
             CLOUDPROBER_VERSION=${{ env.CLOUDPROBER_VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ${{ matrix.extra_build_args }}
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
