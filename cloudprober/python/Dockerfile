@@ -12,13 +12,14 @@ ARG PYTHON_VERSION
 
 RUN microdnf install -y \
         python${PYTHON_VERSION} \
-        python3-pip \
+        python${PYTHON_VERSION}-pip \
         ca-certificates \
         tzdata && \
     microdnf clean all
 
 COPY requirements.txt /tmp/requirements.txt
-RUN python${PYTHON_VERSION} -m pip install --no-cache-dir -r /tmp/requirements.txt && \
+RUN python${PYTHON_VERSION} -m ensurepip --upgrade && \
+    python${PYTHON_VERSION} -m pip install --no-cache-dir -r /tmp/requirements.txt && \
     rm /tmp/requirements.txt
 
 COPY --from=cloudprober-src /cloudprober /usr/local/bin/cloudprober
