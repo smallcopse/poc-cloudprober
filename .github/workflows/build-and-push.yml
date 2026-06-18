@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  CLOUDPROBER_VERSION: v0.13.6
+  CLOUDPROBER_VERSION: v0.14.3
 
 jobs:
   build-and-push:

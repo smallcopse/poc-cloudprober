@@ -1,21 +1,10 @@
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
-ARG TARGETARCH
-ARG CLOUDPROBER_VERSION=v0.13.6
+ARG CLOUDPROBER_VERSION=v0.14.3
 ARG PYTHON_VERSION=3.14
 
-FROM --platform=$BUILDPLATFORM alpine:3.19 AS downloader
-
-ARG CLOUDPROBER_VERSION
-ARG TARGETARCH
-
-RUN apk add --no-cache curl && \
-    ARCH="${TARGETARCH:-amd64}" && \
-    curl -sSfL \
-      "https://github.com/cloudprober/cloudprober/releases/download/${CLOUDPROBER_VERSION}/cloudprober-${CLOUDPROBER_VERSION}-linux-${ARCH}.tar.gz" \
-      -o /tmp/cloudprober.tar.gz && \
-    tar -xzf /tmp/cloudprober.tar.gz -C /usr/local/bin/ cloudprober && \
-    chmod +x /usr/local/bin/cloudprober
+# cloudprober の公式マルチアーキテクチャイメージからバイナリを取得
+FROM --platform=$TARGETPLATFORM ghcr.io/cloudprober/cloudprober:${CLOUDPROBER_VERSION} AS cloudprober-src
 
 FROM redhat/ubi10-minimal:latest
 
@@ -32,7 +21,7 @@ COPY requirements.txt /tmp/requirements.txt
 RUN python${PYTHON_VERSION} -m pip install --no-cache-dir -r /tmp/requirements.txt && \
     rm /tmp/requirements.txt
 
-COPY --from=downloader /usr/local/bin/cloudprober /usr/local/bin/cloudprober
+COPY --from=cloudprober-src /cloudprober /usr/local/bin/cloudprober
 
 COPY scripts/ /scripts/
 
